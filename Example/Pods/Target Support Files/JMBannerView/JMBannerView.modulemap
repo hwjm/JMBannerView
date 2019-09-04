@@ -1,0 +1,6 @@
+framework module JMBannerView {
+  umbrella header "JMBannerView-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -7,6 +7,7 @@
 //
 
 #import "JMViewController.h"
+#import "JMBannerView.h"
 
 @interface JMViewController ()
 
@@ -18,6 +19,10 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
+    
+    
+    
+    
 }
 
 - (void)didReceiveMemoryWarning
