@@ -10,8 +10,8 @@
 #endif
 #endif
 
-#import "ZMBannerLineLayout.h"
-#import "ZMBannerView.h"
+#import "JMBannerLineLayout.h"
+#import "JMBannerView.h"
 
 FOUNDATION_EXPORT double JMBannerViewVersionNumber;
 FOUNDATION_EXPORT const unsigned char JMBannerViewVersionString[];

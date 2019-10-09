@@ -17,8 +17,6 @@
 @property (nonatomic, assign) NSInteger itemsCount;
 @property (nonatomic, assign) NSInteger dequeueSection;
 
-@property (nonatomic, assign) CGFloat autoScrollInterval;
-
 @end
 
 #define kBannerViewSectionCount 200
@@ -28,23 +26,35 @@
 #pragma mark - public
 
 - (void)reloadData {
-    [self.collectionView reloadData];
+    [_collectionView reloadData];
+    NSIndexPath *centerIndexPath = [NSIndexPath indexPathForRow:0 inSection:kBannerViewSectionCount/2];
+    [self resetBannerViewAtIndexpath:centerIndexPath];
 }
 
 - (void)registerClass:(Class)Class forCellWithReuseIdentifier:(NSString *)identifier {
-    [self.collectionView registerClass:Class forCellWithReuseIdentifier:identifier];
+    [_collectionView registerClass:Class forCellWithReuseIdentifier:identifier];
 }
 
 - (__kindof UICollectionViewCell *)dequeueReusableCellWithReuseIdentifier:(NSString *)identifier forIndex:(NSInteger)index {
-    UICollectionViewCell *cell = [self.collectionView dequeueReusableCellWithReuseIdentifier:identifier forIndexPath:[NSIndexPath indexPathForItem:index inSection:self.dequeueSection]];
+    UICollectionViewCell *cell = [_collectionView dequeueReusableCellWithReuseIdentifier:identifier forIndexPath:[NSIndexPath indexPathForItem:index inSection:_dequeueSection]];
     return cell;
 }
 
-- (void)autoScrollWithInterval:(CGFloat)interval {
-    self.autoScrollInterval = interval;
-    [self addTimer];
+- (void)updateLayout {
+    NSIndexPath *centerIndexPath = [NSIndexPath indexPathForRow:[self centerIndexPath].row inSection:kBannerViewSectionCount/2];
+    [_collectionView.collectionViewLayout invalidateLayout];
+    _collectionView.collectionViewLayout = self.lineLayout;
+    [self resetBannerViewAtIndexpath:centerIndexPath];
 }
 
+- (void)stopAutoScroll {
+    [self removeTimer];
+}
+
+- (void)startAutoScroll {
+    [self removeTimer];
+    _autoScrollInterval > 0 ? [self addTimer] : nil;
+}
 
 #pragma mark - init
 - (instancetype)initWithCoder:(NSCoder *)aDecoder {
@@ -72,10 +82,11 @@
     [super layoutSubviews];
 
     _collectionView.frame = self.bounds;
+    [_collectionView.collectionViewLayout invalidateLayout];
     _collectionView.collectionViewLayout = self.lineLayout;
-    
-    if (self.itemsCount>0) {
-        [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:kBannerViewSectionCount/2] atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
+    if (_itemsCount > 0) {
+        NSIndexPath *centerIndexPath = [NSIndexPath indexPathForRow:[self centerIndexPath].row inSection:kBannerViewSectionCount/2];
+        [self resetBannerViewAtIndexpath:centerIndexPath];        
     }
 }
 
@@ -103,42 +114,106 @@
 }
 
 - (void)scrollToNext {
-    if (self.itemsCount == 0) return;
-    NSIndexPath *curr = [NSIndexPath indexPathForRow:[self currentIndexPath].row inSection:kBannerViewSectionCount/2];
-    [self.collectionView scrollToItemAtIndexPath:curr atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
+    if (_itemsCount == 0) return;
     
-    BOOL isNextSection = curr.row+1 >= self.itemsCount;
-    NSInteger row = isNextSection ? 0 : curr.row+1;
-    NSInteger section = isNextSection ? curr.section+1 : curr.section;
-    NSIndexPath *next = [NSIndexPath indexPathForRow:row inSection:section];
+    NSIndexPath *next;
+    JMBannerViewScrollDirection d = _direction;
+    if (d == JMBannerViewScrollDirectionRight) {
+        next = [self rightIndexPath];
+    } else {
+        next = [self leftIndexPath];
+    }
     [self.collectionView scrollToItemAtIndexPath:next atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:YES];
 }
 
-- (NSIndexPath *)currentIndexPath {
-    if (self.itemsCount == 0) return nil;
-    for (UICollectionViewCell *cell in [self.collectionView visibleCells]) {
-        CGPoint p = [self convertPoint:self.center toView:cell];
-        if (CGRectContainsPoint(cell.bounds, p)) {
-            return [self.collectionView indexPathForCell:cell];
-        }
-    }
-    return nil;
+#pragma mark - calculate
+- (NSIndexPath *)centerIndexPath {
+    return [_collectionView indexPathForItemAtPoint:CGPointMake(_collectionView.center.x+_collectionView.contentOffset.x, _collectionView.center.y)];
 }
 
+- (NSIndexPath *)leftIndexPath {
+    NSIndexPath *centerIndex = [self centerIndexPath];
+    BOOL isNextSection = centerIndex.row==0;
+    NSInteger section, row;
+    if (isNextSection) {
+        section = centerIndex.section-1;
+        row     = _itemsCount-1;
+    } else {
+        section = centerIndex.section;
+        row     = centerIndex.row-1;
+    }
+    return [NSIndexPath indexPathForRow:row inSection:section];
+}
+
+- (NSIndexPath *)rightIndexPath {
+    NSIndexPath *centerIndex = [self centerIndexPath];
+    BOOL isNextSection = centerIndex.row >= _itemsCount-1;
+    NSInteger section, row;
+    if (isNextSection) {
+        section = centerIndex.section+1;
+        row     = 0;
+    } else {
+        section = centerIndex.section;
+        row     = centerIndex.row+1;
+    }
+    return [NSIndexPath indexPathForRow:row inSection:section];
+}
+
+- (void)resetBannerViewAtIndexpath:(NSIndexPath *)indexPath {
+    [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
+}
 
 #pragma mark - UICollectionViewDelegate
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
-    if (self.delegate && [self.delegate respondsToSelector:@selector(bannerView:didSelectedItemCell:atIndex:)]) {
-        [self.delegate bannerView:self didSelectedItemCell:[collectionView cellForItemAtIndexPath:indexPath] atIndex:indexPath.row];
+    [self removeTimer];
+    if (_delegate && [_delegate respondsToSelector:@selector(bannerView:didSelectedItemCell:atIndex:isCenterCell:)]) {
+        BOOL isCenter = [[self centerIndexPath] compare:indexPath] == NSOrderedSame;
+        [self.delegate bannerView:self didSelectedItemCell:[collectionView cellForItemAtIndexPath:indexPath] atIndex:indexPath.row isCenterCell:isCenter];
     }
+    [_collectionView scrollToItemAtIndexPath:[self centerIndexPath] atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:YES];
+    [self addTimer];
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
     [self removeTimer];
+    if (_delegate && [_delegate respondsToSelector:@selector(bannerViewWillBeginDragging:)]) {
+        [self.delegate bannerViewWillBeginDragging:self];
+    }
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     [self addTimer];
+    if (_delegate && [_delegate respondsToSelector:@selector(bannerViewDidEndDragging:willDecelerate:)]) {
+        [self.delegate bannerViewDidEndDragging:self willDecelerate:decelerate];
+    }
+}
+
+- (void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView {
+    if (_delegate && [_delegate respondsToSelector:@selector(bannerViewWillBeginDecelerating:)]) {
+        [self.delegate bannerViewWillBeginDecelerating:self];
+    }
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    NSIndexPath *centerIndex = [NSIndexPath indexPathForRow:[self centerIndexPath].row inSection:kBannerViewSectionCount/2];
+    [self resetBannerViewAtIndexpath:centerIndex];
+    if (_delegate && [_delegate respondsToSelector:@selector(bannerViewDidEndDecelerating:)]) {
+        [self.delegate bannerViewDidEndDecelerating:self];
+    }
+}
+
+- (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView {
+    NSIndexPath *centerIndex = [NSIndexPath indexPathForRow:[self centerIndexPath].row inSection:kBannerViewSectionCount/2];
+    [self resetBannerViewAtIndexpath:centerIndex];
+    if (_delegate && [_delegate respondsToSelector:@selector(bannerViewDidEndScrollingAnimation:)]) {
+        [self.delegate bannerViewDidEndScrollingAnimation:self];
+    }
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    if (_delegate && [_delegate respondsToSelector:@selector(bannerViewDidScroll:)]) {
+        [self.delegate bannerViewDidScroll:self];
+    }
 }
 
 #pragma mark - UICollectionViewDataSource
@@ -147,19 +222,19 @@
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    self.itemsCount = [self.dataSource numberOfItemsInBannerView:self];
-    return self.itemsCount;
+    _itemsCount = [_dataSource numberOfItemsInBannerView:self];
+    return _itemsCount;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    self.dequeueSection = indexPath.section;
-    return [self.dataSource bannerView:self cellForItemAtIndex:indexPath.row];
+    _dequeueSection = indexPath.section;
+    return [_dataSource bannerView:self cellForItemAtIndex:indexPath.row];
 }
 
 #pragma mark - getter
 - (UICollectionView *)collectionView {
     if (!_collectionView) {
-        _collectionView = [[UICollectionView alloc] initWithFrame:CGRectZero collectionViewLayout:self.lineLayout];
+        _collectionView = [[UICollectionView alloc] initWithFrame:CGRectZero collectionViewLayout:[[UICollectionViewFlowLayout alloc] init]];
         _collectionView.decelerationRate = UIScrollViewDecelerationRateFast;
         _collectionView.backgroundColor  = [UIColor clearColor];
         _collectionView.showsVerticalScrollIndicator   = NO;
@@ -167,8 +242,6 @@
         _collectionView.delegate      = self;
         _collectionView.dataSource    = self;
         _collectionView.pagingEnabled = NO;
-        _collectionView.pagingEnabled = NO;
-        _collectionView.allowsSelection = self.allowSelect;
     }
     return _collectionView;
 }
@@ -183,6 +256,13 @@
     return _lineLayout;
 }
 
+- (CGSize)mainItemSize {
+    if (CGSizeEqualToSize(CGSizeZero, _mainItemSize)) {
+        _mainItemSize = _collectionView.bounds.size;
+    }
+    return _mainItemSize;
+}
+
 - (CGFloat)subItemScale {
     NSAssert(_subItemScale >= 0, @"error: subItemScale取值范围为(0, 1]");
     if (_subItemScale == 0 || _subItemScale > 1) {
@@ -191,16 +271,18 @@
     return _subItemScale;
 }
 
+- (void)setDirection:(JMBannerViewScrollDirection)direction {
+    [self removeTimer];
+    [self addTimer];
+    _direction = direction;
+}
 
+- (NSInteger)centerIndex {
+    return [self centerIndexPath].row;
+}
 
-
-
-
-
-
-
-
-
-
+- (void)setAllowSelect:(BOOL)allowSelection {
+    _collectionView.allowsSelection = allowSelection;
+}
 
 @end

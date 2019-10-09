@@ -33,25 +33,32 @@
 
 - (NSArray<UICollectionViewLayoutAttributes *> *)layoutAttributesForElementsInRect:(CGRect)rect {
     NSArray *original = [super layoutAttributesForElementsInRect:rect];
+    // _subItemScale 取值区间 (0, 1], 当为1时不做处理
+    if (_subItemScale >=1 || _subItemScale < 0) return original;
+    
     NSArray *arr = [[NSArray alloc] initWithArray:original copyItems:YES];
-    CGFloat centerX = self.collectionView.contentOffset.x+self.collectionView.frame.size.width/2;
+    // 找出中心点
+    CGFloat centerX = self.collectionView.contentOffset.x+self.collectionView.center.x;
     for (UICollectionViewLayoutAttributes *attr in arr) {
-        CGFloat scale = self.subItemScale;
-        CGFloat delta = MIN(self.centerSpace, ABS(attr.center.x-centerX));
-        scale = (1-delta/self.centerSpace)*(1-scale) + scale;
+        CGFloat scale = _subItemScale;
+        // 计算item的缩放比例, 范围[_subItemScale, 1];
+        CGFloat delta = MIN(_centerSpace, ABS(attr.center.x-centerX));
+        scale = (1-delta/_centerSpace)*(1-scale) + scale;
         attr.transform = CGAffineTransformMakeScale(scale, scale);
+        // 中心的item在最上层
+        attr.zIndex = -ABS(attr.center.x-centerX);
     }
     return arr;
 }
 
+// 分页效果
 - (CGPoint)targetContentOffsetForProposedContentOffset:(CGPoint)proposedContentOffset withScrollingVelocity:(CGPoint)velocity {
-    
     CGRect rect;
     rect.origin.x = proposedContentOffset.x;
     rect.origin.y = 0;
     rect.size = self.collectionView.frame.size;
     
-    CGFloat centerX = proposedContentOffset.x+self.collectionView.frame.size.width/2;
+    CGFloat centerX = proposedContentOffset.x+self.collectionView.center.x;
     CGFloat minDelta = MAXFLOAT;
     for (UICollectionViewLayoutAttributes *attr in [super layoutAttributesForElementsInRect:rect]) {
         if (ABS(minDelta)>ABS(attr.center.x-centerX)) {
@@ -61,7 +68,6 @@
     proposedContentOffset.x += minDelta;
     return proposedContentOffset;
 }
-
 
 - (void)setSubItemScale:(CGFloat)subItemScale {
     NSInteger scale = subItemScale*100;

@@ -1,5 +1,5 @@
 PODS:
-  - JMBannerView (0.1.0)
+  - JMBannerView (0.1.1)
 
 DEPENDENCIES:
   - JMBannerView (from `../`)
@@ -9,8 +9,8 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  JMBannerView: 8ac99e8f39f49b43a131432fd84c8311ebf2d2ff
+  JMBannerView: af9d155b16a2bc7725c0da2523d1f94199ae82db
 
 PODFILE CHECKSUM: 55cbc743d32061060f4cb46c3ea48eb3357eb087
 
-COCOAPODS: 1.7.0
+COCOAPODS: 1.8.3
