@@ -10,7 +10,7 @@
 #import "JMBannerView.h"
 #import "JMCustomCell.h"
 
-@interface JMViewController ()<ZMBannerViewDelegate, ZMBannerViewDataSource>
+@interface JMViewController ()<JMBannerViewDelegate, JMBannerViewDataSource>
 
 @property (weak, nonatomic) IBOutlet JMBannerView *bannerView;
 
@@ -62,7 +62,7 @@
     self.timeIntervalLabel.text = @"0";
 }
 
-#pragma mark - ZMBannerViewDataSource
+#pragma mark - JMBannerViewDataSource
 // item数量
 - (NSInteger)numberOfItemsInBannerView:(JMBannerView *)bannerView
 {
@@ -79,7 +79,7 @@
     return cell;
 }
 
-#pragma mark - ZMBannerViewDelegate
+#pragma mark - JMBannerViewDelegate
 // 点击方法
 - (void)bannerView:(JMBannerView *)bannerView didSelectedItemCell:(__kindof UICollectionViewCell *)cell atIndex:(NSInteger)index isCenterCell:(BOOL)isCenter
 {

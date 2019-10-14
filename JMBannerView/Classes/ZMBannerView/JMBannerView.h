@@ -18,7 +18,7 @@ typedef NS_ENUM(NSUInteger, JMBannerViewScrollDirection) {
 
 
 @class JMBannerView;
-@protocol ZMBannerViewDelegate <NSObject>
+@protocol JMBannerViewDelegate <NSObject>
 @optional
 // 点击方法
 - (void)bannerView:(JMBannerView *)bannerView didSelectedItemCell:(__kindof UICollectionViewCell *)cell atIndex:(NSInteger)index isCenterCell:(BOOL)isCenter;
@@ -38,7 +38,7 @@ typedef NS_ENUM(NSUInteger, JMBannerViewScrollDirection) {
 
 @end
 
-@protocol ZMBannerViewDataSource <NSObject>
+@protocol JMBannerViewDataSource <NSObject>
 
 // item数量
 - (NSInteger)numberOfItemsInBannerView:(JMBannerView *)bannerView;
@@ -60,8 +60,8 @@ typedef NS_ENUM(NSUInteger, JMBannerViewScrollDirection) {
 
 @property (nonatomic, assign) JMBannerViewScrollDirection direction; // 滚动方向, 默认向右
 
-@property (nonatomic, weak) id<ZMBannerViewDelegate>   delegate;
-@property (nonatomic, weak) id<ZMBannerViewDataSource> dataSource;
+@property (nonatomic, weak) id<JMBannerViewDelegate>   delegate;
+@property (nonatomic, weak) id<JMBannerViewDataSource> dataSource;
 
 @property (nonatomic, assign, readonly) NSInteger centerIndex;
 
