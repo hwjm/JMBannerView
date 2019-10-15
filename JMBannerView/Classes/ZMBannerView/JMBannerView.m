@@ -28,7 +28,7 @@
 - (void)reloadData {
     [_collectionView reloadData];
     NSIndexPath *centerIndexPath = [NSIndexPath indexPathForRow:0 inSection:kBannerViewSectionCount/2];
-    [self resetBannerViewAtIndexpath:centerIndexPath];
+    if (_itemsCount>0) [self resetBannerViewAtIndexpath:centerIndexPath];
 }
 
 - (void)registerClass:(Class)Class forCellWithReuseIdentifier:(NSString *)identifier {
