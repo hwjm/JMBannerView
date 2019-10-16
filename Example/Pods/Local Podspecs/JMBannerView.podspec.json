@@ -1,6 +1,6 @@
 {
   "name": "JMBannerView",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "summary": "bannerView",
   "description": "TODO: A Simple BannerView.",
   "homepage": "https://github.com/K-Nezuko/JMBannerView",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/K-Nezuko/JMBannerView.git",
-    "tag": "0.1.2"
+    "tag": "0.1.5"
   },
   "platforms": {
     "ios": "8.0"

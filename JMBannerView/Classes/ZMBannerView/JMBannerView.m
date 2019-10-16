@@ -28,7 +28,7 @@
 - (void)reloadData {
     [_collectionView reloadData];
     NSIndexPath *centerIndexPath = [NSIndexPath indexPathForRow:0 inSection:kBannerViewSectionCount/2];
-    if (_itemsCount>0) [self resetBannerViewAtIndexpath:centerIndexPath];
+    [self resetBannerViewAtIndexpath:centerIndexPath];
 }
 
 - (void)registerClass:(Class)Class forCellWithReuseIdentifier:(NSString *)identifier {
@@ -160,7 +160,9 @@
 }
 
 - (void)resetBannerViewAtIndexpath:(NSIndexPath *)indexPath {
-    [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
+    if (_itemsCount>0) {
+        [_collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];        
+    }
 }
 
 #pragma mark - UICollectionViewDelegate
