@@ -54,7 +54,6 @@
 
 // 分页效果
 - (CGPoint)targetContentOffsetForProposedContentOffset:(CGPoint)proposedContentOffset withScrollingVelocity:(CGPoint)velocity {
-    NSLog(@"%@", NSStringFromCGPoint(velocity));
     CGRect rect;
     rect.origin.x = proposedContentOffset.x;
     rect.origin.y = 0;
