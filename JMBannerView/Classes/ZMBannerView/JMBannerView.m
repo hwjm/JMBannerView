@@ -75,6 +75,8 @@
 
 - (void)defaultSetting {
     self.backgroundColor = [UIColor clearColor];
+    _allowSelection = YES;
+    _dragEnable     = YES;
     [self addSubview:self.collectionView];
 }
 
@@ -285,6 +287,11 @@
 
 - (void)setAllowSelect:(BOOL)allowSelection {
     _collectionView.allowsSelection = allowSelection;
+}
+
+- (void)setDragEnable:(BOOL)dragEnable {
+    _dragEnable = dragEnable;
+    _collectionView.scrollEnabled = dragEnable;
 }
 
 @end

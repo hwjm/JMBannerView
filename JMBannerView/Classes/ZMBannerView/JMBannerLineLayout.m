@@ -22,6 +22,7 @@
     self.scrollDirection = UICollectionViewScrollDirectionHorizontal;
     self.itemSize = self.centerItemSize.width==0||self.centerItemSize.height==0 ? self.collectionView.bounds.size : self.centerItemSize;
     
+    // 真实的item space
     self.minimumLineSpacing = self.itemSpace - (self.centerItemSize.width*(1-self.subItemScale))/2;
     self.centerSpace = self.centerItemSize.width+self.minimumLineSpacing;
     self.sectionInset = UIEdgeInsetsMake(0, self.minimumLineSpacing/2, 0, self.minimumLineSpacing/2);
@@ -53,6 +54,7 @@
 
 // 分页效果
 - (CGPoint)targetContentOffsetForProposedContentOffset:(CGPoint)proposedContentOffset withScrollingVelocity:(CGPoint)velocity {
+    NSLog(@"%@", NSStringFromCGPoint(velocity));
     CGRect rect;
     rect.origin.x = proposedContentOffset.x;
     rect.origin.y = 0;
@@ -65,7 +67,12 @@
             minDelta = attr.center.x-centerX;
         }
     }
+
     proposedContentOffset.x += minDelta;
+    if (ABS(velocity.x)<1 && ABS(velocity.x)>0.2) {
+        int symbol = velocity.x/ABS(velocity.x);
+        proposedContentOffset.x += (self.itemSize.width+self.minimumLineSpacing)*symbol;
+    }
     return proposedContentOffset;
 }
 

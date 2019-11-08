@@ -57,6 +57,7 @@ typedef NS_ENUM(NSUInteger, JMBannerViewScrollDirection) {
 @property (nonatomic, assign) CGFloat autoScrollInterval; // 自动滚动时间, 默认0;
 
 @property (nonatomic, assign) BOOL allowSelection;  // 是否允许选中, 默认为Yes
+@property (nonatomic, assign) BOOL dragEnable;      // 是否可以拖拽, 默认为Yes
 
 @property (nonatomic, assign) JMBannerViewScrollDirection direction; // 滚动方向, 默认向右
 
