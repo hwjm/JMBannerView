@@ -21,6 +21,7 @@
     
     self.scrollDirection = UICollectionViewScrollDirectionHorizontal;
     self.itemSize = self.centerItemSize.width==0||self.centerItemSize.height==0 ? self.collectionView.bounds.size : self.centerItemSize;
+    self.itemSize = CGSizeMake(MIN(self.collectionView.bounds.size.width, self.itemSize.width), MIN(self.collectionView.bounds.size.height, self.itemSize.height));
     
     // 真实的item space
     self.minimumLineSpacing = self.itemSpace - (self.centerItemSize.width*(1-self.subItemScale))/2;
